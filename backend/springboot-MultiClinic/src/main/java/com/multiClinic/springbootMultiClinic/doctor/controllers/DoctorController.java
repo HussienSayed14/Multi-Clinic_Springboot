@@ -1,12 +1,14 @@
 package com.multiClinic.springbootMultiClinic.doctor.controllers;
 
 import com.multiClinic.springbootMultiClinic.doctor.Doctor;
+import com.multiClinic.springbootMultiClinic.doctor.security.config.JwtService;
 import com.multiClinic.springbootMultiClinic.doctor.services.DoctorService;
 import com.multiClinic.springbootMultiClinic.patient.Patient;
 import com.multiClinic.springbootMultiClinic.patient.PatientRepository;
 import com.multiClinic.springbootMultiClinic.patient.PatientService;
 import com.multiClinic.springbootMultiClinic.patientHistory.PatientHistory;
 import com.multiClinic.springbootMultiClinic.patientHistory.PatientHistoryService;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,42 +24,52 @@ public class DoctorController {
      PatientService patientService;
      @Autowired
      PatientHistoryService patientHistoryService;
+    @Autowired
+    JwtService jwtService;
 
-
-     @PostMapping("/addPatient/{doctorID}")
-     public Patient addPatient(@RequestBody Patient patient, @PathVariable int doctorID) {
-          return doctorService.addPatient(patient, doctorID);
-     }
-
-     @GetMapping("/allPatients/{id}")
-     public List<Patient> getAllPatients(@PathVariable int id) {
-          return doctorService.getAllPatients(id);
-     }
-
-     @GetMapping("/getPatientById/{doctorID}/{patientID}")
-     public Patient getPatientById(@PathVariable int patientID, @PathVariable int doctorID) {
-          return doctorService.getPatientById(patientID, doctorID);
-
-     }
-
-     @DeleteMapping("/deletePatient/{doctorID}/{patientID}")
-        public void deletePatientById(@PathVariable int patientID, @PathVariable int doctorID) {
-            doctorService.deletePatientById(patientID, doctorID);
+     @GetMapping("/hello")
+     public int hello(@RequestHeader("Authorization") String token) {
+         String jwtToken = token.substring(7);
+         int loggedInId = jwtService.extractID(jwtToken);
+         //System.out.println("Logged In ID is: "+loggedInId);
+            return loggedInId;
         }
 
-        @PostMapping("/addPatientHistory/{doctorID}/{patientID}")
-        public PatientHistory addPatientHistory(@RequestBody PatientHistory patientHistory, @PathVariable int doctorID, @PathVariable int patientID) {
-            return doctorService.addPatientHistory(patientHistory, doctorID, patientID);
+
+     @PostMapping("/addPatient")
+     public Patient addPatient(@RequestBody Patient patient, @RequestHeader("Authorization") String token) {
+          return doctorService.addPatient(patient, token);
+     }
+
+     @GetMapping("/allPatients")
+     public List<Patient> getAllPatients(@RequestHeader("Authorization") String token) {
+          return doctorService.getAllPatients(token);
+     }
+
+     @GetMapping("/getPatientById/{patientID}")
+     public Patient getPatientById(@PathVariable int patientID,@RequestHeader("Authorization") String token) {
+          return doctorService.getPatientById(patientID,token);
+
+     }
+
+     @DeleteMapping("/deletePatient/{patientID}")
+        public void deletePatientById(@PathVariable int patientID,@RequestHeader("Authorization") String token) {
+            doctorService.deletePatientById(patientID, token);
         }
 
-        @GetMapping("/getPatientHistoryById/{doctorID}/{patientID}")
-        public List<PatientHistory> getPatientHistoryById(@PathVariable int doctorID, @PathVariable int patientID) {
-            return doctorService.getPatientHistoryById(doctorID, patientID);
+        @PostMapping("/addPatientHistory/{patientID}")
+        public PatientHistory addPatientHistory(@RequestBody PatientHistory patientHistory,@RequestHeader("Authorization") String token, @PathVariable int patientID) {
+            return doctorService.addPatientHistory(patientHistory, token, patientID);
         }
 
-        @GetMapping("/searchPatientsByName/{doctorID}/{name}")
-        public List<Patient> searchPatientsByName(@PathVariable int doctorID, @PathVariable String name) {
-            return doctorService.searchPatientsByName(doctorID, name);
+        @GetMapping("/getPatientHistoryById/{patientID}")
+        public List<PatientHistory> getPatientHistoryById(@RequestHeader("Authorization") String token, @PathVariable int patientID) {
+            return doctorService.getPatientHistoryById(token, patientID);
+        }
+
+        @GetMapping("/searchPatientsByName/{name}")
+        public List<Patient> searchPatientsByName(@RequestHeader("Authorization") String token, @PathVariable String name) {
+            return doctorService.searchPatientsByName(token, name);
         }
 
 

@@ -3,6 +3,7 @@ package com.multiClinic.springbootMultiClinic.doctor.services;
 
 import com.multiClinic.springbootMultiClinic.doctor.Doctor;
 import com.multiClinic.springbootMultiClinic.doctor.repository.DoctorRepository;
+import com.multiClinic.springbootMultiClinic.doctor.security.config.JwtService;
 import com.multiClinic.springbootMultiClinic.patient.Patient;
 import com.multiClinic.springbootMultiClinic.patient.PatientService;
 import com.multiClinic.springbootMultiClinic.patientHistory.PatientHistory;
@@ -24,15 +25,26 @@ public class DoctorService {
     PatientService patientService;
     @Autowired
     PatientHistoryService patientHistoryService;
+    @Autowired
+    JwtService jwtService;
 
+    public int extractIdFromToken(String token){
+        String jwtToken = token.substring(7);
+        int loggedInId = jwtService.extractID(jwtToken);
 
-    public List<Patient> getAllPatients(int id){
+        return loggedInId;
+
+    }
+
+    public List<Patient> getAllPatients(String token){
+        int id = extractIdFromToken(token);
         Optional<Doctor> doctor = doctorRepository.findById(id);
         return doctor.get().getPatients();
 
     }
 
-    public Patient addPatient(Patient patient, int doctorID) {
+    public Patient addPatient(Patient patient, String token) {
+        int doctorID = extractIdFromToken(token);
         Optional<Doctor> doctor = doctorRepository.findById(doctorID);
         doctor.get().addPatient(patient);
         return patientService.addPatient(patient);
@@ -40,8 +52,9 @@ public class DoctorService {
 
     }
 
-    public Patient getPatientById(int patientID,int doctorID) {
+    public Patient getPatientById(int patientID,String token) {
         Patient patient = patientService.getPatientById(patientID);
+        int doctorID = extractIdFromToken(token);
         Optional<Doctor> doctor = doctorRepository.findById(doctorID);
         if(doctor.get().getPatients().contains(patient)){
             return patient;
@@ -51,8 +64,9 @@ public class DoctorService {
 
     }
 
-    public String deletePatientById(int patientID, int doctorID) {
+    public String deletePatientById(int patientID, String token) {
         Patient patient = patientService.getPatientById(patientID);
+        int doctorID = extractIdFromToken(token);
         Optional<Doctor> doctor = doctorRepository.findById(doctorID);
         if(doctor.get().getPatients().contains(patient)){
             return patientService.deletePatient(patientID);
@@ -62,8 +76,9 @@ public class DoctorService {
 
     }
 
-    public PatientHistory addPatientHistory(PatientHistory patientHistory, int doctorID, int patientID) {
+    public PatientHistory addPatientHistory(PatientHistory patientHistory,String token, int patientID) {
         Patient patient = patientService.getPatientById(patientID);
+        int doctorID = extractIdFromToken(token);
         Optional<Doctor> doctor = doctorRepository.findById(doctorID);
         patientHistory.setDate(new Date());
         if(doctor.get().getPatients().contains(patient)){
@@ -75,8 +90,9 @@ public class DoctorService {
     }
 
 
-    public List<PatientHistory> getPatientHistoryById(int doctorID, int patientID) {
+    public List<PatientHistory> getPatientHistoryById(String token, int patientID) {
         Patient patient = patientService.getPatientById(patientID);
+        int doctorID = extractIdFromToken(token);
         Optional<Doctor> doctor = doctorRepository.findById(doctorID);
         if(doctor.get().getPatients().contains(patient)){
             return patientHistoryService.getPatientHistoryById(patient);
@@ -85,7 +101,8 @@ public class DoctorService {
         }
     }
 
-    public List<Patient> searchPatientsByName(int doctorID, String name) {
+    public List<Patient> searchPatientsByName(String token, String name) {
+        int doctorID = extractIdFromToken(token);
         Optional<Doctor> doctor = doctorRepository.findById(doctorID);
         return doctor.get().getPatientsByName(name);
     }
